@@ -1,6 +1,5 @@
 import {readFile,writeFile,mkdir,cp,unlink} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
-import {gzipSync} from 'node:zlib';
 const root=fileURLToPath(new URL('../',import.meta.url)).replaceAll('\\','/');
 const dir=root+'public/data';await mkdir(dir,{recursive:true});
 const read=async name=>JSON.parse(await readFile(root+'.cache/'+name,'utf8'));
@@ -11,11 +10,12 @@ const minutes=t=>t?Number(t.slice(0,2))*60+Number(t.slice(3,5)):null;
 const trains=(await read('trains.json')).map(t=>({id:t.trainNumber,name:t.trainName,days:Object.entries(t.runningDays||{}).filter(([,v])=>v).map(([d])=>['SUN','MON','TUE','WED','THU','FRI','SAT'].indexOf(d)),stops:t.completeOrderedRoute.filter(s=>valid.has(s.stationCode)).map(s=>[s.stationCode,minutes(s.arrivalTime),minutes(s.departureTime),s.journeyDay||1,s.distance||0])})).filter(t=>t.stops.length>1&&t.days.length);
 const airports=csv(await readFile(root+'.cache/airports.csv','utf8')).filter(a=>a.iata_code&&['large_airport','medium_airport','small_airport'].includes(a.type)&&(a.scheduled_service==='yes'||a.iso_country==='IN')).map(a=>({id:a.iata_code,name:a.name,city:a.municipality,country:a.iso_country,lat:Number(a.latitude_deg),lon:Number(a.longitude_deg),scheduled:a.scheduled_service==='yes',kind:'air',size:a.type,site:/^https?:\/\//.test(a.home_link)?a.home_link:null}));
 const uniqueAirports=[...new Map(airports.filter(a=>Number.isFinite(a.lat)&&Number.isFinite(a.lon)).map(a=>[a.id,a])).values()];
-await writeFile(dir+'/stations.json',JSON.stringify(stations));await writeFile(dir+'/trains.json.gz',gzipSync(JSON.stringify(trains),{level:9}));await unlink(dir+'/trains.json').catch(e=>{if(e.code!=='ENOENT')throw e;});await writeFile(dir+'/airports.json',JSON.stringify(uniqueAirports));
+const trainFiles=[];for(let i=0;i<trains.length;i+=900){const name='trains-'+Math.floor(i/900)+'.json';trainFiles.push(name);await writeFile(dir+'/'+name,JSON.stringify(trains.slice(i,i+900)));}
+await writeFile(dir+'/stations.json',JSON.stringify(stations));for(const name of ['trains.json','trains.json.gz'])await unlink(dir+'/'+name).catch(e=>{if(e.code!=='ENOENT')throw e;});await writeFile(dir+'/airports.json',JSON.stringify(uniqueAirports));
 await cp(root+'.cache/rail-license.txt',dir+'/rail-license.txt');
 const index=await read('flight-index.json');const codes=uniqueAirports.filter(a=>a.country==='IN'&&index.airports.includes(a.id.toLowerCase())).map(a=>a.id.toLowerCase());
 const flights={};let cursor=0;
 await Promise.all(Array.from({length:4},async()=>{while(cursor<codes.length){const code=codes[cursor++];let data;try{data=JSON.parse(await readFile(root+'.cache/airport-'+code+'.json','utf8'));}catch{const r=await fetch('https://airportmiles.com/api/v1/airports/'+code+'.json',{headers:{'User-Agent':'Waypoint/1.0 (static travel planning; contact: prateekheda@yahoo.com)'},signal:AbortSignal.timeout(25000)});if(!r.ok)throw Error(code+': '+r.status);data=await r.json();await writeFile(root+'.cache/airport-'+code+'.json',JSON.stringify(data));}flights[code.toUpperCase()]=data;if(cursor%20===0)console.log('Airport connections '+cursor+'/'+codes.length);}}));
 await writeFile(dir+'/flights.json',JSON.stringify(flights));
-const manifest={built:new Date().toISOString().slice(0,10),stations:stations.length,airports:uniqueAirports.length,trains:trains.length,airportNetworks:Object.keys(flights).length,flightGenerated:index.generated,railSource:'https://github.com/prasenjit-27/Indian-Railway-Data',railTimetableDate:null,flightSource:'https://airportmiles.com/api',airportSource:'https://ourairports.com/data/'};
+const manifest={built:new Date().toISOString().slice(0,10),stations:stations.length,airports:uniqueAirports.length,trains:trains.length,trainFiles,airportNetworks:Object.keys(flights).length,flightGenerated:index.generated,railSource:'https://github.com/prasenjit-27/Indian-Railway-Data',railTimetableDate:null,flightSource:'https://airportmiles.com/api',airportSource:'https://ourairports.com/data/'};
 await writeFile(dir+'/manifest.json',JSON.stringify(manifest));console.log(JSON.stringify(manifest));
