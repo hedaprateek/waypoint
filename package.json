@@ -1,1 +1,16 @@
-{"name":"waypoint-travel","version":"1.0.0","private":true,"type":"module","scripts":{"start":"node serve.mjs","build":"node scripts/build.mjs","check":"node --check public/app.js && node --check public/engine.js && node --check public/api.js && node --check scripts/build.mjs","test":"node --test --test-isolation=none tests/engine.test.mjs"},"engines":{"node":">=22"}}
+{
+  "name": "waypoint-travel",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node serve.mjs",
+    "build": "node scripts/build.mjs",
+    "check": "node --check public/app.js && node --check public/engine.js && node --check public/api.js && node --check public/data-freshness.js && node --check public/refresh-ui.js && node --check serve.mjs && node --check scripts/data-refresh.mjs && node --check scripts/refresh-controller.mjs && node --check scripts/refresh-data.mjs && node --check scripts/build.mjs",
+    "test": "node --test --test-isolation=none tests/engine.test.mjs tests/refresh.test.mjs tests/server.test.mjs",
+    "refresh": "node scripts/refresh-data.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

@@ -1,9 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import {activeSnapshot} from '../scripts/data-refresh.mjs';
 import {km,nearest,corridor,createRailIndex,planRail,createFlightGraph,planFlights,filterRoutes,scoreRoutes,nextDeparture,dateDay,groundLeg,parseShare,shareURL} from '../public/engine.js';
 import {cities} from '../public/cities.js';
-const read=async name=>{if(name==='trains'){const manifest=await read('manifest');return (await Promise.all(manifest.trainFiles.map(file=>readFile(new URL('../public/data/'+file,import.meta.url),'utf8').then(JSON.parse)))).flat();}return JSON.parse(await readFile(new URL('../public/data/'+name+'.json',import.meta.url),'utf8'));};
+const active=await activeSnapshot(fileURLToPath(new URL('..',import.meta.url)));
+const read=async name=>{if(name==='trains'){const manifest=await read('manifest');return (await Promise.all(manifest.trainFiles.map(file=>readFile(active.directory+'/'+file,'utf8').then(JSON.parse)))).flat();}return JSON.parse(await readFile(active.directory+'/'+name+'.json','utf8'));};
 test('great-circle distance, radius and corridor do not confuse nearby with on-route',()=>{
  const a={lat:0,lon:0},b={lat:0,lon:1};assert.ok(Math.abs(km(a,b)-111.195)<.01);
  assert.equal(nearest(a,[a,b],{radius:50}).length,1);

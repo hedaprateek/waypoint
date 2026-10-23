@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 2,
+  "built": "2026-10-23",
+  "revision": "v-1792774790895-fd04a252",
+  "refreshedAt": "2026-10-23T16:59:51.034Z",
+  "refreshStartedAt": "2026-10-23T16:59:32.702Z",
+  "stations": 8697,
+  "trains": 5199,
+  "airports": 4056,
+  "airportNetworks": 116,
+  "trainFiles": [
+    "trains-0.json",
+    "trains-1.json",
+    "trains-2.json",
+    "trains-3.json",
+    "trains-4.json",
+    "trains-5.json"
+  ],
+  "flightGenerated": "2026-10-14",
+  "railSource": "https://github.com/prasenjit-27/Indian-Railway-Data",
+  "railTimetableDate": null,
+  "flightSource": "https://airportmiles.com/api",
+  "airportSource": "https://ourairports.com/data/",
+  "sources": {
+    "rail": {
+      "label": "Railway stations & approximate timetable",
+      "retrievedAt": "2026-10-23T16:59:35.044Z",
+      "directoryRetrievedAt": "2026-10-23T16:59:33.316Z",
+      "upstreamModifiedAt": null,
+      "effectiveAt": null
+    },
+    "airports": {
+      "label": "Airport locations & passenger-service flags",
+      "retrievedAt": "2026-10-23T16:59:37.881Z",
+      "upstreamModifiedAt": null,
+      "effectiveAt": null
+    },
+    "connections": {
+      "label": "Reported airport connections",
+      "retrievedAt": "2026-10-23T16:59:51.034Z",
+      "generatedAt": "2026-10-14",
+      "generatedThrough": "2026-10-14",
+      "reportingPeriods": [
+        {
+          "source": "U.S. DOT, Bureau of Transportation Statistics, T-100 Segment (all carriers, scheduled service)",
+          "period": "2025-08…2026-07"
+        },
+        {
+          "source": "Eurostat, avia_par_* and avia_paoa",
+          "period": "2022, 2023, 2024; airports 2025"
+        },
+        {
+          "source": "DGCA (Directorate General of Civil Aviation, India), city-pair traffic, scheduled services (provisional)",
+          "period": "domestic 2025-10…2026-09; international 2025-01…2025-12"
+        }
+      ]
+    }
+  }
+}

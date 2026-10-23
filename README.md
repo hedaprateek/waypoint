@@ -4,7 +4,7 @@ A static travel atlas for the awkward journeys between a city, its nearby statio
 
 ## Run locally
 
-Double-click `start.cmd`, or run `npm start` and open **http://localhost:8816/**. Node.js 22 or later is required for the local server and build, but visitors need only a modern browser. No npm dependencies, API keys, accounts or backend are needed. Opening the HTML directly as a file cannot load the JSON datasets.
+Double-click `start.cmd`, or run `npm start` and open **http://localhost:8816/**. Node.js 22 or later is required for the local server and build, but visitors need only a modern browser. No npm dependencies, API keys or accounts are needed. Viewing the exported site needs only static hosting; full manual source refresh runs through the included local server. Opening the HTML directly as a file cannot load the JSON datasets.
 
 ## Features
 
@@ -26,7 +26,7 @@ Best balance ranks the middle of the fare range + total hours × the chosen time
 
 ## Sources and licences
 
-Dataset counts and retrieval date are in `public/data/manifest.json`.
+`public/data/current.json` points to the active snapshot and its manifest. The manifest records dataset counts, source download timestamps, source-generated dates and available reporting periods separately. Legacy bundles retain their original bundle date without inventing missing download timestamps.
 
 | Source | Use | Licence / limitations |
 |---|---|---|
@@ -40,10 +40,24 @@ Nominatim searches happen only after an explicit **Search online** action, never
 
 ## Checks and deployment
 
-`npm run check`, `npm test`, `npm run build`. The build copies only `public/` into `dist/`. Deploy `dist/` to any static host. No secrets or private guest data are used.
+`npm run check`, `npm test`, `npm run build`. The build exports public app assets and **only the active dataset** into `dist/`, with a portable flat dataset pointer. Previous snapshots, refresh locks/status, raw caches and server code are excluded. Deploy `dist/` to any static host. No secrets or private guest data are used. Refresh and build commands do not commit, push or deploy anything; publishing is a separate step. The live site is **https://hedaprateek.github.io/waypoint/**. Pushing to `main` runs the checks and publishes the build through GitHub Actions.
 
 The tracked `.openai/hosting.json` retains the registered private Sites identity. The current corporate network blocks the Sites helper download; the same build is portable to GitHub Pages. The registered Site must be reused if Sites hosting is completed later.
 
 ## Refreshing data
 
-`node scripts/fetch-data.mjs` downloads the railway source, OurAirports CSV and AirportMiles index into ignored `.cache/`, then `node scripts/prepare-data.mjs` builds the compact public snapshots and fetches/caches the 116 covered Indian airport records with at most four concurrent requests. Re-run checks after refreshing and inspect changes before deployment. Refreshing the files does not make the railway timetable current. Unknown effective dates remain explicitly unknown.
+Use **Refresh data** above the planner at **http://localhost:8816/**. Alternatively run **`npm run refresh`**. No timer or scheduled job downloads new source data. A 90-day age indicator is informational; it never starts a download.
+
+A manual refresh downloads the station directory, approximate train timetable, railway licence, airport directory, airport connection index and every covered Indian airport record. Airport requests run with at most three concurrent connections. Old on-disk airport records are never reused as newly downloaded data. Map tiles and the pinned Leaflet library are not downloaded by this process.
+
+The refresh checks source formats, coordinates, licence, airport identities, counts, train station references and reporting dates. An unexpected coverage loss of more than 20%, or a failed/invalid source, aborts the entire refresh and keeps the last valid snapshot. After all files are ready, an atomic `current.json` pointer switches to a new immutable generation in `public/data/snapshots/`. Existing tabs keep reading their original generation until reloaded. Previous snapshots remain available locally; exports include only the active generation.
+
+Progress and the last success/failure are recorded in ignored `.cache/refresh-status.json`. A cross-process lock prevents overlapping server/CLI refreshes. An interrupted refresh is identified after restart without replacing active data. The browser resumes polling if a refresh is already running, and preserves the current journey and saved trips if a refresh or reload fails.
+
+**Data status** shows when each source was downloaded and, separately, its supplied snapshot/reporting period. A recently downloaded old report remains visibly old. A missing timetable effective date stays unknown. Approximate fares and durations are model calculations and are recalculated with the journey; they are not relabelled as downloaded prices.
+
+On static hosting the button reads **Reload published data**. It reloads the latest published snapshot and clears lookup caches; it cannot write new source files to GitHub or start a server job. To publish newer data later, refresh locally, validate, build, and publish when approved.
+
+Foreign airport lookups expire after 30 days. If an expired lookup cannot be updated, its last saved data remains usable and is explicitly marked stale. Manual reload clears only travel lookup caches, never saved trips. Geocoding and overseas railway lookup caches retain their seven-day lifetime.
+
+The old `scripts/fetch-data.mjs` and `scripts/prepare-data.mjs` entry points now each perform the full validated refresh for compatibility. Use `npm run refresh` once rather than running both. The local refresh API accepts only same-origin JSON POST requests on loopback, checks the Host header and does not expose arbitrary file or source URLs.
