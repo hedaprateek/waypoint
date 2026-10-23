@@ -1,0 +1,1 @@
+{"name":"waypoint-travel","version":"1.0.0","private":true,"type":"module","scripts":{"start":"node serve.mjs","build":"node scripts/build.mjs","check":"node --check public/app.js && node --check public/engine.js && node --check public/api.js && node --check scripts/build.mjs","test":"node --test --test-isolation=none tests/engine.test.mjs"},"engines":{"node":">=22"}}
